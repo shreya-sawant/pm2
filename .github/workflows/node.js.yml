@@ -3,10 +3,10 @@ name: Node.js CI
 on: [push, pull_request]
 
 jobs:
-
-  node-tests-amd64:
+  node-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
     strategy:
       matrix:
         node-version: [22.x]
@@ -19,10 +19,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - name: Install Python
-        run: sudo apt install python3
+        run: sudo apt-get install -y python3
       - name: Install PHP CLI
-        run: sudo apt install php-cli
-      - name: Install Node.js dependencies
+        run: sudo apt-get install -y php-cli
+      - name: Install dependencies
         run: npm install
       - name: Run end-to-end tests
         run: npm run test:e2e
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Run tests on s390x using run-on-arch-action
+      - name: Run tests on s390x architecture
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: s390x
@@ -45,7 +45,6 @@ jobs:
             apt-get update
             apt-get install -y wget tar xz-utils curl python3 php-cli
           run: |
-            # Setup workspace and Node.js
             export SOURCE_ROOT=/tmp/pm2-src
             mkdir -p $SOURCE_ROOT && cd $SOURCE_ROOT
             wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz
@@ -53,11 +52,9 @@ jobs:
             mv node-v17.5.0-linux-s390x nodejs
             export PATH=$SOURCE_ROOT/nodejs/bin:$PATH
 
-            # Show Node.js versions
             node -v
             npm -v
 
-            # Return to source and run tests
             cd $GITHUB_WORKSPACE
             npm install
             npm run test:e2e
@@ -68,22 +65,21 @@ jobs:
     timeout-minutes: 30
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Remove Node.js installed by setup-node action (if any)
-      run: |
-        if command -v node &> /dev/null; then
-          sudo rm -rf "$(which node)"
-        fi
-        if command -v npm &> /dev/null; then
-          sudo rm -rf "$(which npm)"
-        fi
+      - uses: actions/checkout@v3
+      - name: Remove Node.js installed by setup-node action (if any)
+        run: |
+          if command -v node &> /dev/null; then
+            sudo rm -rf "$(which node)"
+          fi
+          if command -v npm &> /dev/null; then
+            sudo rm -rf "$(which npm)"
+          fi
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+      - name: Install dependencies using Bun
+        run: bun install
+      - name: Run end-to-end tests with Bun
+        run: bun run test:e2e
+      - name: Run unit tests with Bun
+        run: bun run test:unit
 
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-    - name: Install dependencies using Bun
-      run: bun install
-    - name: Run end-to-end tests with Bun
-      run: bun run test:e2e
-    - name: Run unit tests with Bun
-      run: bun run test:unit
