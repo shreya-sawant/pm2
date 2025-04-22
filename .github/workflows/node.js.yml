@@ -34,6 +34,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
+
       - name: Run tests on s390x using run-on-arch-action
         uses: uraimo/run-on-arch-action@v2
         with:
@@ -42,16 +43,23 @@ jobs:
           shell: bash
           install: |
             apt-get update
-            apt-get install -y wget tar xz-utils
+            apt-get install -y wget tar xz-utils curl python3 php-cli
           run: |
+            # Setup workspace and Node.js
             export SOURCE_ROOT=/tmp/pm2-src
             mkdir -p $SOURCE_ROOT && cd $SOURCE_ROOT
-            
             wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz
             tar xf node-v17.5.0-linux-s390x.tar.xz
             mv node-v17.5.0-linux-s390x nodejs
             export PATH=$SOURCE_ROOT/nodejs/bin:$PATH
-            npm install pm2 -g
+
+            # Show Node.js versions
+            node -v
+            npm -v
+
+            # Return to source and run tests
+            cd $GITHUB_WORKSPACE
+            npm install
             npm run test:e2e
             npm run test:unit
 
