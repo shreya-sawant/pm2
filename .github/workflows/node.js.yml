@@ -38,7 +38,7 @@ jobs:
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: s390x
-          distro: ubuntu_latest
+          distro: ubuntu22.04
           shell: bash
           install: |
             apt-get update
