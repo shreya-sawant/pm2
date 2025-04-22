@@ -67,24 +67,20 @@ jobs:
     - name: Build and test on s390x
       run: |
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-
-        docker buildx build --platform linux/s390x --pull --load -t s390x-pm2 - <<EOF
+        docker buildx build --platform linux/s390x --pull --load -t s390x-pm2 . -f- <<EOF
         FROM ubuntu:22.04
-
         ENV DEBIAN_FRONTEND=noninteractive
         RUN apt-get update && \
             apt-get install -y curl python3 php-cli wget tar xz-utils tzdata && \
             ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
             dpkg-reconfigure --frontend noninteractive tzdata
-
         WORKDIR /app
         COPY . .
-
         RUN wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz && \
             tar xf node-v17.5.0-linux-s390x.tar.xz && \
-            mv node-v17.5.0-linux-s390x nodejs && \
-            export PATH=/app/nodejs/bin:\$PATH && \
-            npm install pm2 -g && \
+            mv node-v17.5.0-linux-s390x nodejs
+        ENV PATH="/app/nodejs/bin:$PATH"
+        RUN npm install pm2 -g && \
             npm install && \
             npm run test:e2e && \
             npm run test:unit
