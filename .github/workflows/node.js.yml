@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run tests on s390x using run-on-arch-action
-        uses: uraimo/run-on-arch-action@v3
+        uses: uraimo/run-on-arch-action@v2
         with:
           arch: s390x
           distro: ubuntu_latest
