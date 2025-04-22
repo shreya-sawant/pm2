@@ -3,6 +3,7 @@ name: Node.js CI
 on: [push, pull_request]
 
 jobs:
+
   node-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -19,53 +20,23 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - name: Install Python
-        run: sudo apt-get install -y python3
+        run: sudo apt install python3
       - name: Install PHP CLI
-        run: sudo apt-get install -y php-cli
-      - name: Install dependencies
+        run: sudo apt install php-cli
+      - name: Install Node.js dependencies
         run: npm install
       - name: Run end-to-end tests
         run: npm run test:e2e
       - name: Run unit tests
         run: npm run test:unit
 
-  node-tests-s390x:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run tests on s390x architecture
-        uses: uraimo/run-on-arch-action@v2
-        with:
-          arch: s390x
-          distro: ubuntu22.04
-          shell: bash
-          install: |
-            apt-get update
-            apt-get install -y wget tar xz-utils curl python3 php-cli
-          run: |
-            export SOURCE_ROOT=/tmp/pm2-src
-            mkdir -p $SOURCE_ROOT && cd $SOURCE_ROOT
-            wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz
-            tar xf node-v17.5.0-linux-s390x.tar.xz
-            mv node-v17.5.0-linux-s390x nodejs
-            export PATH=$SOURCE_ROOT/nodejs/bin:$PATH
-
-            node -v
-            npm -v
-
-            cd $GITHUB_WORKSPACE
-            npm install
-            npm run test:e2e
-            npm run test:unit
-
   bun-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Remove Node.js installed by setup-node action (if any)
         run: |
           if command -v node &> /dev/null; then
@@ -74,6 +45,7 @@ jobs:
           if command -v npm &> /dev/null; then
             sudo rm -rf "$(which npm)"
           fi
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
       - name: Install dependencies using Bun
@@ -82,4 +54,45 @@ jobs:
         run: bun run test:e2e
       - name: Run unit tests with Bun
         run: bun run test:unit
+
+  node-tests-s390x:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and test on s390x
+        run: |
+          docker buildx build --platform linux/s390x --pull --load -t s390x-pm2 - <<EOF
+          FROM ubuntu:22.04
+
+          RUN apt-get update && apt-get install -y \
+            curl wget xz-utils tar python3 php-cli git \
+            && rm -rf /var/lib/apt/lists/*
+
+          # Install Node.js for s390x manually
+          RUN wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz && \
+              tar xf node-v17.5.0-linux-s390x.tar.xz && \
+              mv node-v17.5.0-linux-s390x /opt/node && \
+              ln -s /opt/node/bin/node /usr/bin/node && \
+              ln -s /opt/node/bin/npm /usr/bin/npm
+
+          WORKDIR /app
+          COPY . .
+
+          RUN npm install
+          CMD ["npm", "run", "test:e2e"]
+          EOF
+
+          docker run --rm s390x-pm2
 
