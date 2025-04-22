@@ -4,31 +4,56 @@ on: [push, pull_request]
 
 jobs:
 
-  node-tests:
+  node-tests-amd64:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     strategy:
       matrix:
         node-version: [22.x]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - name: Install Python
-      run: sudo apt install python3
-    - name: Install PHP CLI
-      run: sudo apt install php-cli
-    - name: Install Node.js dependencies
-      run: npm install
-    - name: Run end-to-end tests
-      run: npm run test:e2e
-    - name: Run unit tests
-      run: npm run test:unit
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install Python
+        run: sudo apt install python3
+      - name: Install PHP CLI
+        run: sudo apt install php-cli
+      - name: Install Node.js dependencies
+        run: npm install
+      - name: Run end-to-end tests
+        run: npm run test:e2e
+      - name: Run unit tests
+        run: npm run test:unit
+
+  node-tests-s390x:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run tests on s390x using run-on-arch-action
+        uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: s390x
+          distro: ubuntu_latest
+          shell: bash
+          install: |
+            apt-get update
+            apt-get install -y wget tar xz-utils
+          run: |
+            export SOURCE_ROOT=/tmp/pm2-src
+            mkdir -p $SOURCE_ROOT && cd $SOURCE_ROOT
+            
+            wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz
+            tar xf node-v17.5.0-linux-s390x.tar.xz
+            mv node-v17.5.0-linux-s390x nodejs
+            export PATH=$SOURCE_ROOT/nodejs/bin:$PATH
+            npm install pm2 -g
+            npm run test:e2e
+            npm run test:unit
 
   bun-tests:
     runs-on: ubuntu-latest
