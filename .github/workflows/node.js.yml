@@ -2,84 +2,91 @@ name: Node.js CI
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-
   node-tests:
+    name: Node.js Tests on ${{ matrix.platform }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
     strategy:
+      fail-fast: false
       matrix:
+        platform: [amd64, s390x]
         node-version: [22.x]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - name: Install Python
-      run: sudo apt install python3
-    - name: Install PHP CLI
-      run: sudo apt install php-cli
-    - name: Install Node.js dependencies
-      run: npm install
-    - name: Run end-to-end tests
-      run: npm run test:e2e
-    - name: Run unit tests
-      run: npm run test:unit
+      - uses: actions/checkout@v3
+
+      - name: Setup QEMU (for s390x)
+        if: matrix.platform == 's390x'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: s390x
+
+      - name: Run Node.js tests on ${{ matrix.platform }}
+        run: |
+          if [ "${{ matrix.platform }}" = "s390x" ]; then
+            echo "Running Node.js tests on s390x platform..."
+            docker run --rm --platform linux/s390x node:${{ matrix.node-version }} bash -c "
+              apt-get update && apt-get install -y python3 php-cli && \
+              npm install && \
+              npm run test:e2e && \
+              npm run test:unit
+            "
+          else
+            echo "Running Node.js tests on amd64 platform..."
+            sudo apt-get update && sudo apt-get install -y python3 php-cli
+            npm install
+            npm run test:e2e
+            npm run test:unit
+          fi
 
   bun-tests:
+    name: Bun Tests on ${{ matrix.platform }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [amd64, s390x]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Remove Node.js installed by setup-node action (if any)
-      run: |
-        if command -v node &> /dev/null; then
-          sudo rm -rf "$(which node)"
-        fi
-        if command -v npm &> /dev/null; then
-          sudo rm -rf "$(which npm)"
-        fi
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-    - name: Install dependencies using Bun
-      run: bun install
-    - name: Run end-to-end tests with Bun
-      run: bun run test:e2e
-    - name: Run unit tests with Bun
-      run: bun run test:unit
+      - uses: actions/checkout@v3
 
-  node-tests-s390x:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Setup QEMU (for s390x)
+        if: matrix.platform == 's390x'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: s390x
 
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Remove Node.js (if any)
+        run: |
+          if command -v node &> /dev/null; then sudo rm -rf "$(which node)"; fi
+          if command -v npm &> /dev/null; then sudo rm -rf "$(which npm)"; fi
 
-    - name: Build and test on s390x
-      run: |
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-        docker buildx build --platform linux/s390x --pull --load -t s390x-pm2 . -f- <<EOF
-        FROM ubuntu:22.04
-        ENV DEBIAN_FRONTEND=noninteractive
-        RUN apt-get update && \
-            apt-get install -y curl python3 php-cli wget tar xz-utils tzdata && \
-            ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-            dpkg-reconfigure --frontend noninteractive tzdata
-        WORKDIR /app
-        COPY . .
-        RUN wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz && \
-            tar xf node-v17.5.0-linux-s390x.tar.xz && \
-            mv node-v17.5.0-linux-s390x nodejs
-        ENV PATH="/app/nodejs/bin:$PATH"
-        RUN npm install pm2 -g && npm install && ls -l node_modules/.bin && npm run test:e2e || echo "e2e failed" && npm run test:unit || echo "unit failed"
-        EOF
+      - name: Run Bun tests on ${{ matrix.platform }}
+        run: |
+          if [ "${{ matrix.platform }}" = "s390x" ]; then
+            echo "Running Bun tests on s390x platform..."
+            docker run --rm --platform linux/s390x ubuntu:22.04 bash -c "
+              apt-get update && apt-get install -y curl python3 php-cli wget tar xz-utils tzdata && \
+              ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata && \
+              curl -fsSL https://bun.sh/install | bash && \
+              export BUN_INSTALL=/root/.bun && export PATH=\$BUN_INSTALL/bin:\$PATH && \
+              bun install && \
+              bun run test:e2e && \
+              bun run test:unit
+            "
+          else
+            echo "Running Bun tests on amd64 platform..."
+            # native amd64 runner
+            sudo apt-get update && sudo apt-get install -y python3 php-cli
+            curl -fsSL https://bun.sh/install | bash
+            export BUN_INSTALL=$HOME/.bun
+            export PATH=$BUN_INSTALL/bin:$PATH
+            bun install
+            bun run test:e2e
+            bun run test:unit
+          fi
 
