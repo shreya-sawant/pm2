@@ -29,8 +29,8 @@ jobs:
         run: |
           if [ "${{ matrix.platform }}" = "s390x" ]; then
             echo "Running Node.js tests on s390x platform..."
-            docker run --rm --platform linux/s390x node:${{ matrix.node-version }} bash -c "
-              apt-get update && apt-get install -y python3 php-cli && \
+            docker run --rm --platform linux/s390x node:22-alpine bash -c "
+              apk update && apk add python3 php-cli && \
               npm install && \
               npm run test:e2e && \
               npm run test:unit
@@ -69,9 +69,11 @@ jobs:
         run: |
           if [ "${{ matrix.platform }}" = "s390x" ]; then
             echo "Running Bun tests on s390x platform..."
-            docker run --rm --platform linux/s390x ubuntu:22.04 bash -c "
-              apt-get update && apt-get install -y curl python3 php-cli wget tar xz-utils tzdata && \
-              ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata && \
+            docker run --rm --platform linux/s390x ubuntu:latest bash -c "
+              export DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
+              ln -fs /usr/share/zoneinfo/\$TZ /etc/localtime
+              apt-get update && apt-get install -y curl python3 php-cli wget tar xz-utils tzdata
+              dpkg-reconfigure --frontend noninteractive tzdata && \
               curl -fsSL https://bun.sh/install | bash && \
               export BUN_INSTALL=/root/.bun && export PATH=\$BUN_INSTALL/bin:\$PATH && \
               bun install && \
