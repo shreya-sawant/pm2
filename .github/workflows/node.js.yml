@@ -36,6 +36,7 @@ jobs:
               apt-get install -y apt-utils curl gnupg
               curl -sL https://deb.nodesource.com/setup_20.x | bash -
               apt-get install -y nodejs
+              apt-get install -y npm
               apt-get install -y python3 
               apt-get install -y php-cli
               node -v
@@ -54,55 +55,26 @@ jobs:
           fi
 
   bun-tests:
-    name: Bun Tests on ${{ matrix.platform }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [amd64, s390x]
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Remove Node.js installed by setup-node action (if any)
+      run: |
+        if command -v node &> /dev/null; then
+          sudo rm -rf "$(which node)"
+        fi
+        if command -v npm &> /dev/null; then
+          sudo rm -rf "$(which npm)"
+        fi
 
-      - name: Setup QEMU (for s390x)
-        if: matrix.platform == 's390x'
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: s390x
-
-      - name: Remove Node.js (if any)
-        run: |
-          if command -v node &> /dev/null; then sudo rm -rf "$(which node)"; fi
-          if command -v npm &> /dev/null; then sudo rm -rf "$(which npm)"; fi
-
-      - name: Run Bun tests on ${{ matrix.platform }}
-        run: |
-          if [ "${{ matrix.platform }}" = "s390x" ]; then
-            echo "Running Bun tests on s390x platform..."
-            docker run --rm --platform linux/s390x ubuntu:latest bash -c "
-              export DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
-              ln -fs /usr/share/zoneinfo/\$TZ /etc/localtime
-              apt-get update -qq
-              apt-get install -y unzip curl python3 php-cli wget tar xz-utils tzdata
-               dpkg-reconfigure --frontend noninteractive tzdata
-               curl -fsSL https://bun.sh/install | bash
-               export BUN_INSTALL=/root/.bun
-               export PATH=\$BUN_INSTALL/bin:\$PATH
-               source /root/.bashrc
-               bun install
-               bun run test:e2e
-               bun run test:unit
-             "
-          else
-            echo "Running Bun tests on amd64 platform..."
-            sudo apt-get update && sudo apt-get install -y python3 php-cli
-            curl -fsSL https://bun.sh/install | bash
-            export BUN_INSTALL=$HOME/.bun
-            export PATH=$BUN_INSTALL/bin:$PATH
-            bun install
-            bun run test:e2e
-            bun run test:unit
-          fi
-
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+    - name: Install dependencies using Bun
+      run: bun install
+    - name: Run end-to-end tests with Bun
+      run: bun run test:e2e
+    - name: Run unit tests with Bun
+      run: bun run test:unit
