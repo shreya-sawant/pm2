@@ -32,11 +32,12 @@ jobs:
             echo "Running Node.js tests on s390x platform..."
             docker run --rm --platform linux/s390x ubuntu:latest bash -c "
               export DEBIAN_FRONTEND=noninteractive
+              apt-get update
               apt-get install -y curl gnupg
-              curl -sL https://deb.nodesource.com/setup_20.x | bash -
-              apt-get install nodejs
               apt-get install python3 
               apt-get install php-cli
+              curl -sL https://deb.nodesource.com/setup_20.x | bash -
+              apt-get install -y nodejs
               npm install
               npm run test:e2e
               npm run test:unit
