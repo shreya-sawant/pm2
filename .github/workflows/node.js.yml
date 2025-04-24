@@ -33,11 +33,13 @@ jobs:
             docker run --rm --platform linux/s390x ubuntu:latest bash -c "
               export DEBIAN_FRONTEND=noninteractive
               apt-get update
-              apt-get install -y curl gnupg
-              apt-get install python3 
-              apt-get install php-cli
+              apt-get install -y apt-utils curl gnupg
               curl -sL https://deb.nodesource.com/setup_20.x | bash -
               apt-get install -y nodejs
+              apt-get install -y python3 
+              apt-get install -y php-cli
+              node -v
+              npm -v
               npm install
               npm run test:e2e
               npm run test:unit
@@ -80,16 +82,17 @@ jobs:
           if [ "${{ matrix.platform }}" = "s390x" ]; then
             echo "Running Bun tests on s390x platform..."
             docker run --rm --platform linux/s390x ubuntu:latest bash -c "
-              export DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC && \
-              ln -fs /usr/share/zoneinfo/\$TZ /etc/localtime && \
-              apt-get update -qq && \
-              apt-get install -y unzip curl python3 php-cli wget tar xz-utils tzdata && \
-               dpkg-reconfigure --frontend noninteractive tzdata && \
-               curl -fsSL https://bun.sh/install | bash && \
-               export BUN_INSTALL=/root/.bun && \
-               export PATH=\$BUN_INSTALL/bin:\$PATH && \
-               bun install && \
-               bun run test:e2e && \
+              export DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
+              ln -fs /usr/share/zoneinfo/\$TZ /etc/localtime
+              apt-get update -qq
+              apt-get install -y unzip curl python3 php-cli wget tar xz-utils tzdata
+               dpkg-reconfigure --frontend noninteractive tzdata
+               curl -fsSL https://bun.sh/install | bash
+               export BUN_INSTALL=/root/.bun
+               export PATH=\$BUN_INSTALL/bin:\$PATH
+               source /root/.bashrc
+               bun install
+               bun run test:e2e
                bun run test:unit
              "
           else
