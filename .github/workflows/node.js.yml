@@ -30,21 +30,22 @@ jobs:
         run: |
           if [ "${{ matrix.platform }}" = "s390x" ]; then
             echo "Running Node.js tests on s390x platform..."
-            docker run --rm --platform linux/s390x ubuntu:latest bash -c "
-              export DEBIAN_FRONTEND=noninteractive
-              apt-get update
-              apt-get install -y apt-utils curl gnupg
-              curl -sL https://deb.nodesource.com/setup_20.x | bash -
-              apt-get install -y nodejs
-              apt-get install -y npm
-              apt-get install -y python3 
-              apt-get install -y php-cli
-              node -v
-              npm -v
-              npm install
-              npm run test:e2e
-              npm run test:unit
-            "
+            docker run --rm --platform linux/s390x \
+              -v $(pwd):/app \
+              -w /app \
+              ubuntu:22.04 bash -c "
+                export DEBIAN_FRONTEND=noninteractive
+                apt-get update
+                apt-get install -y apt-utils curl gnupg
+                curl -sL https://deb.nodesource.com/setup_20.x | bash -
+                apt-get install -y nodejs
+                apt-get install -y npm
+                apt-get install -y python3 
+                apt-get install -y php-cli
+                npm install
+                npm run test:e2e
+                npm run test:unit
+              "
           else
             echo "Running Node.js tests on amd64 platform..."
             sudo apt install python3
