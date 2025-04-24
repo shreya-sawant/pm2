@@ -36,8 +36,7 @@ jobs:
               ubuntu:22.04 bash -c "
                 export DEBIAN_FRONTEND=noninteractive
                 apt-get update
-                apt-get install -y apt-utils curl gnupg
-                curl -sL https://deb.nodesource.com/setup_20.x | bash -
+                apt-get install -y apt-utils curl
                 apt-get install -y nodejs
                 apt-get install -y npm
                 apt-get install -y python3 
