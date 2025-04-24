@@ -37,8 +37,8 @@ jobs:
                 export DEBIAN_FRONTEND=noninteractive
                 apt-get update
                 apt-get install -y apt-utils curl
-                apt-get install -y nodejs
-                apt-get install -y npm
+                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+                nvm install 22
                 apt-get install -y python3 
                 apt-get install -y php-cli
                 npm install
@@ -78,3 +78,113 @@ jobs:
       run: bun run test:e2e
     - name: Run unit tests with Bun
       run: bun run test:unit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bun-tests:
+    name: Bun Tests on ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [amd64, s390x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup QEMU (for s390x)
+        if: matrix.platform == 's390x'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: s390x
+
+      - name: Remove Node.js (if any)
+        run: |
+          if command -v node &> /dev/null; then sudo rm -rf "$(which node)"; fi
+          if command -v npm &> /dev/null; then sudo rm -rf "$(which npm)"; fi
+
+      - name: Run Bun tests on ${{ matrix.platform }}
+        run: |
+          if [ "${{ matrix.platform }}" = "s390x" ]; then
+            echo "Running Bun tests on s390x platform..."
+            docker run --rm --platform linux/s390x ubuntu:latest bash -c "
+              export DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
+              ln -fs /usr/share/zoneinfo/\$TZ /etc/localtime
+              apt-get update -qq
+              apt-get install -y unzip curl python3 php-cli wget tar xz-utils tzdata
+               dpkg-reconfigure --frontend noninteractive tzdata
+               curl -fsSL https://bun.sh/install | bash
+               export BUN_INSTALL=/root/.bun
+               export PATH=\$BUN_INSTALL/bin:\$PATH
+               source /root/.bashrc
+               bun install
+               bun run test:e2e
+               bun run test:unit
+             "
+          else
+            echo "Running Bun tests on amd64 platform..."
+            sudo apt-get update && sudo apt-get install -y python3 php-cli
+            curl -fsSL https://bun.sh/install | bash
+            export BUN_INSTALL=$HOME/.bun
+            export PATH=$BUN_INSTALL/bin:$PATH
+            bun install
+            bun run test:e2e
+            bun run test:unit
+          fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+sudo apt-get update && sudo apt-get install -y python3 php-cli
+sudo snap install cmake --classic
+export PATH=/snap/bin:$PATH
+git clone https://github.com/oven-sh/bun.git
+cd bun
+make
+export PATH=$HOME/bun/bin:$PATH
+bun install
+bun run test:e2e
+bun run test:unit
