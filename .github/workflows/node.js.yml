@@ -44,11 +44,10 @@ jobs:
                 apt-get install -y php-cli
                 npm install pm2 -g 
                 npm install
-                pm2 install pm2-server-monit || true
+                npm run test:e2e
                 sed -i 's/bunx mocha/bunx mocha --timeout 30000/g' test/unit.sh
                 sed -i 's/npx mocha/npx mocha --timeout 30000/g' test/unit.sh
-                npm run test:e2e
-                npm run test:unit  -- --timeout 30000
+                npm run test:unit
               "
           else
             echo "Running Node.js tests on amd64 platform..."
