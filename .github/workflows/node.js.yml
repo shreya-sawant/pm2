@@ -36,16 +36,18 @@ jobs:
               ubuntu:22.04 bash -c "
                 export DEBIAN_FRONTEND=noninteractive
                 apt-get update
-                apt-get install -y apt-utils wget tar sudo xz-utils bc
+                apt-get install -y apt-utils wget tar sudo xz-utils bc build-essential
                 wget https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-s390x.tar.xz
                 tar -xf node-v22.15.0-linux-s390x.tar.xz
                 cp -r node-v22.15.0-linux-s390x/* /usr/local/
                 apt-get install -y python3 
                 apt-get install -y php-cli
+                rm -rf /root/.pm2/modules
                 npm install pm2 -g 
                 npm install
+                pm2 install pm2-server-monit || true
                 npm run test:e2e
-                npm run test:unit
+                npm run test:unit  -- --timeout 30000
               "
           else
             echo "Running Node.js tests on amd64 platform..."
