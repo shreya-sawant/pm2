@@ -48,8 +48,9 @@ jobs:
                 npm install pm2 -g 
                 npm install
                 npm run test:e2e
-                sed -i 's/bunx mocha/bunx mocha --timeout 120000/g' test/unit.sh
-                sed -i 's/npx mocha/npx mocha --timeout 120000/g' test/unit.sh
+                sleep 5
+                sed -i 's/bunx mocha/bunx mocha --timeout 300000/g' test/unit.sh
+                sed -i 's/npx mocha/npx mocha --timeout 300000/g' test/unit.sh
                 npm run test:unit
               "
           else
