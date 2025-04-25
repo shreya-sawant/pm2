@@ -36,11 +36,10 @@ jobs:
               ubuntu:22.04 bash -c "
                 export DEBIAN_FRONTEND=noninteractive
                 apt-get update
-                apt-get install -y apt-utils curl
-                RUN wget https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-s390x.tar.xz && \
-                    tar xf node-v22.15.0-linux-s390x.tar.xz && \
-                    mv node-v22.15.0-linux-s390x nodejs
-                ENV PATH="/app/nodejs/bin:$PATH"
+                apt-get install -y apt-utils
+                wget https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-s390x.tar.xz
+                tar -xf node-v22.15.0-linux-s390x.tar.xz
+                sudo cp -r node-v22.15.0-linux-s390x/* /usr/local/
                 apt-get install -y python3 
                 apt-get install -y php-cli
                 npm install
