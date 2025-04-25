@@ -37,20 +37,15 @@ jobs:
                 export DEBIAN_FRONTEND=noninteractive
                 apt-get update
                 apt-get install -y apt-utils wget tar sudo xz-utils bc build-essential curl git libssl-dev
-                wget https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-s390x.tar.xz
-                tar -xf node-v22.15.0-linux-s390x.tar.xz
-                cp -r node-v22.15.0-linux-s390x/* /usr/local/
-                export PATH=/usr/local/bin:\$PATH
-                export NODE_PATH=/usr/local/lib/node_modules
-                rm -rf node_modules
+                wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz
+                tar xf node-v17.5.0-linux-s390x.tar.xz
+                mv node-v17.5.0-linux-s390x nodejs
+                export PATH=$(pwd)/nodejs/bin:$PATH
                 apt-get install -y python3 
                 apt-get install -y php-cli
                 npm install pm2 -g 
                 npm install
                 npm run test:e2e
-                sleep 5
-                sed -i 's/bunx mocha/bunx mocha --timeout 300000/g' test/unit.sh
-                sed -i 's/npx mocha/npx mocha --timeout 300000/g' test/unit.sh
                 npm run test:unit
               "
           else
