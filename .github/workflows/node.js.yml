@@ -41,8 +41,10 @@ jobs:
                 tar -xf node-v17.5.0-linux-s390x.tar.xz
                 cp -r node-v22.15.0-linux-s390x/* /usr/local/
                 export PATH=/usr/local/bin:\$PATH
+                apt-get install -y npm
                 apt-get install -y python3 
                 apt-get install -y php-cli
+                npm install -g npm@10.9.2
                 npm install pm2 -g 
                 npm install
                 npm run test:e2e
