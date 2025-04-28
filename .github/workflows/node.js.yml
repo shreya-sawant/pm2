@@ -39,9 +39,8 @@ jobs:
                 apt-get install -y wget tar xz-utils
                 wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz
                 tar -xf node-v17.5.0-linux-s390x.tar.xz
-                mv node-v17.5.0-linux-s390x nodejs
-                export PATH=$(pwd)/nodejs/bin:$PATH
-                apt-get install npm
+                mv node-v17.5.0-linux-s390x/* /usr/local/
+                export PATH=/usr/local/bin:$PATH
                 npm install pm2 -g 
                 npm install
                 npm run test:e2e
