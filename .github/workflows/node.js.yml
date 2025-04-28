@@ -36,7 +36,7 @@ jobs:
               ubuntu:22.04 bash -c "
                 export DEBIAN_FRONTEND=noninteractive
                 apt-get update
-                apt-get install -y wget tar xz-utils
+                apt-get install -y apt-utils wget tar sudo xz-utils bc build-essential
                 wget https://nodejs.org/dist/v17.5.0/node-v17.5.0-linux-s390x.tar.xz
                 tar -xf node-v17.5.0-linux-s390x.tar.xz
                 cp -r node-v17.5.0-linux-s390x/* /usr/local/
