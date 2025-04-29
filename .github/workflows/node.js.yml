@@ -39,7 +39,8 @@ jobs:
                 apt-get install -y wget tar xz-utils build-essential curl bc python3 php-cli 
                 wget https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-s390x.tar.xz
                 tar -xf node-v22.15.0-linux-s390x.tar.xz
-                export PATH=$(pwd)/node-v22.15.0-linux-s390x/bin:$PATH
+                cp -r node-v22.15.0-linux-s390x/* /usr/local/
+                echo "/usr/local/bin" >> $GITHUB_PATH
                 npm install
                 npm run test:e2e
                 npm run test:unit
