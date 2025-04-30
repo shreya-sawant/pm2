@@ -15,7 +15,7 @@ TEST_VARIABLE='hello1' $pm2 start startProcessInsidePm2.json
 # sleep 1
 # should 'start master process' 'pm_id: 0' 2
 
-sleep 1
+sleep 2
 
 $pm2 list
 
@@ -26,7 +26,7 @@ grep "hello1" inside-out.log &> /dev/null
 spec "Child should have hello1 variable"
 
 TEST_VARIABLE='hello2' $pm2 restart "insideProcess" --update-env
-sleep 1
+sleep 2
 grep "hello2" inside-out.log &> /dev/null
 spec "Child should have hello2 variable after restart"
 
@@ -34,7 +34,7 @@ spec "Child should have hello2 variable after restart"
 $pm2 delete all
 
 $pm2 start echo.js
-sleep 1
+sleep 2
 
 export PM2_PATH=$pm2
 $pm2 start inside/inner_restart.sh --no-autorestart
