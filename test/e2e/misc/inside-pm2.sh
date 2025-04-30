@@ -26,7 +26,7 @@ grep "hello1" inside-out.log &> /dev/null
 spec "Child should have hello1 variable"
 
 TEST_VARIABLE='hello2' $pm2 restart "insideProcess" --update-env
-sleep 2
+sleep 4
 grep "hello2" inside-out.log &> /dev/null
 spec "Child should have hello2 variable after restart"
 
