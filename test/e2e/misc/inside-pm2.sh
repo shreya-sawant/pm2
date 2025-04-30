@@ -34,7 +34,7 @@ spec "Child should have hello2 variable after restart"
 $pm2 delete all
 
 $pm2 start echo.js
-sleep 2
+sleep 4
 
 export PM2_PATH=$pm2
 $pm2 start inside/inner_restart.sh --no-autorestart
