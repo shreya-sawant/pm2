@@ -11,8 +11,9 @@ echo -e "\033[1mENV REFRESH\033[0m"
 #
 TEST_VARIABLE='hello1' $pm2 start env.js -o out-env.log --merge-logs --name "env"
 >out-env.log
-
+printenv
 sleep 2
+printenv
 grep "hello1" out-env.log &> /dev/null
 spec "should contain env variable"
 
