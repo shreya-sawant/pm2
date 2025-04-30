@@ -20,7 +20,7 @@ else
 fi
 
 $pm2 start path-check.js --no-autorestart -o path-check2.txt
-sleep 1
+sleep 2
 
 OUT=`diff path-check1.txt path-check2.txt`
 
