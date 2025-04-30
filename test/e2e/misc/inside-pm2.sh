@@ -38,5 +38,5 @@ sleep 2
 
 export PM2_PATH=$pm2
 $pm2 start inside/inner_restart.sh --no-autorestart
-sleep 2
+sleep 4
 should 'restarted status should be one' "restart_time: 3" 1
