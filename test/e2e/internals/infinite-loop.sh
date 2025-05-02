@@ -11,8 +11,8 @@ $pm2 start killtoofast.js --name unstable-process
 
 echo -n "Waiting for process to restart too many times and pm2 to stop it"
 
-for (( i = 0; i <= 200; i++ )); do
-    sleep 0.1
+for (( i = 0; i <= 300; i++ )); do
+    sleep 0.2
     echo -n "."
 done
 
