@@ -11,10 +11,24 @@ $pm2 start killtoofast.js --name unstable-process
 
 echo -n "Waiting for process to restart too many times and pm2 to stop it"
 
-for (( i = 0; i <= 4800; i++ )); do
-    sleep 0.5
-    echo -n "."
+start_time=$(date +%s)
+
+for ((i = 0; i != 1 ; i=i+0)); do  # 3 minutes max
+    status=$($pm2 jlist | jq -r '.[] | select(.name=="unstable-process") | .pm2_env.status')
+    echo "Status: $status"
+
+    if [ "$status" == "errored" ]; then
+        i=1
+        echo "✔ unstable-process is in errored state"
+        break
+    fi
+
+    sleep 0.2
 done
+
+end_time=$(date +%s)
+elapsed=$((end_time - start_time))
+echo "Process took $elapsed seconds to reach errored state"
 
 
 $pm2 list
@@ -41,11 +55,11 @@ echo "Restart with unstable process"
 
 $pm2 list
 
-$pm2 restart all  # pm2 reload should also work here
+$pm2 restart all  # pm2 reload should also work here
 
 for (( i = 0; i <= 80; i++ )); do
-    sleep 0.1
-    echo -n "."
+    sleep 0.1
+    echo -n "."
 done
 
 $pm2 list
@@ -56,4 +70,4 @@ rm killthen.js
 
 $pm2 list
 
-$pm2 kill
+$pm2 kill 
